@@ -1,0 +1,67 @@
+---
+- hosts: localhost
+  gather_facts: false
+  connection: local
+  name: Install Console Customizations
+
+  tasks:
+    - name: Create Environment Banner
+      k8s:
+        kubeconfig: "{{ lookup('env','HOME') }}/{{ ocp_cluster_name }}/auth/kubeconfig"
+        state: present
+        force: true
+        name: "environment-banner"
+        definition:
+          apiVersion: console.openshift.io/v1
+          kind: ConsoleNotification
+          metadata:
+            name: environment-banner
+          spec:
+            backgroundColor: "{{ banner_color }}"
+            color: "{{ banner_text_color }}"
+            location: "{{ banner_location }}"
+            text: "{{ cluster_friendly_env }}"
+      when: "install_banner | default (false)"
+  
+    - name: Get base64 encode output for custom image file
+      shell: base64 "{{ lookup('env','HOME') }}/{{ ocp_cluster_name }}/custom_console_logo.png"
+      changed_when: false
+      register: r_logo_b64encode
+      when: "install_logo | default (false)"
+
+    - name: Set custom image base64 encoded
+      set_fact:
+        logo_b64encoded: "{{ r_logo_b64encode.stdout }}"
+      when: "install_logo | default (false)"
+
+    - name: Create Logo Config Map
+      k8s:
+        kubeconfig: "{{ lookup('env','HOME') }}/{{ ocp_cluster_name }}/auth/kubeconfig"
+        state: present
+        definition:
+          apiVersion: v1
+          kind: ConfigMap
+          metadata:
+            name: custom-console-logo-cm
+            namespace: openshift-config
+          binaryData:
+            custom_logo.png: "{{ logo_b64encoded }}"
+      when: "install_logo | default (false)"
+
+    - name: Update cluster console operator config to add Product Name and Logo Config
+      k8s:
+        kubeconfig: "{{ lookup('env','HOME') }}/{{ ocp_cluster_name }}/auth/kubeconfig"
+        state: present
+        definition:
+          apiVersion: operator.openshift.io/v1
+          kind: Console
+          metadata:
+            name: cluster
+          spec:
+            customization:
+              customLogoFile:
+                key: custom_logo.png
+                name: custom-console-logo-cm
+              customProductName: "{{ org }} - {{ cluster_friendly_env }}"
+            managementState: Managed
+      when: "install_logo | default (false)"

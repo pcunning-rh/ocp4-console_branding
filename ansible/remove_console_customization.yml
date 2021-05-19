@@ -1,0 +1,63 @@
+---
+- hosts: localhost
+  gather_facts: false
+  connection: local
+  name: Remove Console Customizations
+
+  tasks:
+    - name: Remove Environment Banner
+      k8s:
+        kubeconfig: "{{ lookup('env','HOME') }}/{{ ocp_cluster_name }}/auth/kubeconfig"
+        state: absent
+        force: true
+        name: "environment-banner"
+        definition:
+          apiVersion: console.openshift.io/v1
+          kind: ConsoleNotification
+          metadata:
+            name: environment-banner
+      when: "remove_banner | default(false)"
+
+    - name: Remove Logo Config Map
+      k8s:
+        kubeconfig: "{{ lookup('env','HOME') }}/{{ ocp_cluster_name }}/auth/kubeconfig"
+        state: absent
+        definition:
+          apiVersion: v1
+          kind: ConfigMap
+          metadata:
+            name: custom-console-logo-cm
+            namespace: openshift-config
+      when: "remove_logo | default (false)"
+
+    - name: Get OpenShift console operator config facts
+      k8s_info:
+        kubeconfig: "{{ lookup('env','HOME') }}/{{ ocp_cluster_name }}/auth/kubeconfig"
+        api_version: operator.openshift.io/v1
+        kind: Console
+        name: cluster
+      register: cluster_console_operator
+      when: "remove_logo | default (false)"
+    
+    - name: Set cluster console operator config resource version
+      set_fact: 
+        cluster_console_operator_resource_version: "{{ item.metadata.resourceVersion }}"
+      loop: "{{ cluster_console_operator.resources }}"
+      no_log: true
+      when: "remove_logo | default (false)"
+
+    - name: Update cluster console operator config to remove Product Name and Logo Config
+      k8s:
+        kubeconfig: "{{ lookup('env','HOME') }}/{{ ocp_cluster_name }}/auth/kubeconfig"
+        state: present
+        force: true
+        merge_type: merge
+        definition:
+          apiVersion: operator.openshift.io/v1
+          kind: Console
+          metadata:
+            name: cluster
+            resourceVersion: "{{ cluster_console_operator_resource_version  }}"
+          spec:
+            managementState: Managed
+      when: "remove_logo | default (false)"

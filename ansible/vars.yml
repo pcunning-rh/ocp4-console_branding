@@ -1,0 +1,44 @@
+ocp_cluster_name: cluster-04d2 # Used for finding path to kubeconfig auth file on Bastion host
+cluster_friendly_env: "Internal, Production" # Used for banner text and browser title bar
+org: "XYZ Corp" # Used for browser title bar
+
+banner_location: BannerTopBottom #Banner Location Options: BannerTop, BannerBottom, BannerTopBottom
+
+install_banner: false # Set to true to run task in install playbook
+install_logo: false # Set to true to run task in install playbook
+
+remove_banner: false # Set to true to run task in remove playbook
+remove_logo: false # Set to true to run task in remove playbook
+
+# Sample Banner Color Codes, uncomment a pair:
+
+# Red Banner, White Text
+banner_color: "#EE0000"
+banner_text_color: "#FFF"
+
+# Blue Banner, White Text
+#banner_color: "#0000FF"
+#banner_text_color: "#FFF"
+
+# Green Banner, Black Text
+#banner_color: "#00FF00"
+#banner_text_color: "#000"
+
+# Hex Color Codes for Common Basic Colors
+#
+# White  	#FFFFFF
+# Silver 	#C0C0C0
+# Gray   	#808080
+# Black  	#000000
+# Red    	#FF0000
+# Maroon 	#800000
+# Yellow 	#FFFF00
+# Olive  	#808000
+# Lime   	#00FF00
+# Green  	#008000
+# Aqua   	#00FFFF
+# Teal   	#008080
+# Blue    	#0000FF
+# Navy    	#000080
+# Fuchsia	#FF00FF
+# Purple 	#800080
