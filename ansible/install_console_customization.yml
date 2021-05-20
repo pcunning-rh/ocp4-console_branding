@@ -6,7 +6,7 @@
 
   tasks:
     - name: Create Environment Banner
-      k8s:
+      kubernetes.core.k8s:
         kubeconfig: "{{ lookup('env','HOME') }}/{{ ocp_cluster_name }}/auth/kubeconfig"
         state: present
         force: true
@@ -24,7 +24,7 @@
       when: "install_banner | default (false)"
   
     - name: Get base64 encode output for custom image file
-      shell: base64 "{{ lookup('env','HOME') }}/{{ ocp_cluster_name }}/custom_console_logo.png"
+      shell: base64 "{{ lookup('env','HOME') }}/{{ ocp_cluster_name }}/ocp4-console_branding/images/custom_console_logo.png"
       changed_when: false
       register: r_logo_b64encode
       when: "install_logo | default (false)"
@@ -35,7 +35,7 @@
       when: "install_logo | default (false)"
 
     - name: Create Logo Config Map
-      k8s:
+      kubernetes.core.k8s:
         kubeconfig: "{{ lookup('env','HOME') }}/{{ ocp_cluster_name }}/auth/kubeconfig"
         state: present
         definition:
@@ -49,7 +49,7 @@
       when: "install_logo | default (false)"
 
     - name: Update cluster console operator config to add Product Name and Logo Config
-      k8s:
+      kubernetes.core.k8s:
         kubeconfig: "{{ lookup('env','HOME') }}/{{ ocp_cluster_name }}/auth/kubeconfig"
         state: present
         definition:
